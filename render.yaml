@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: ewaste-api
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python manage.py makemigrations --noinput && python manage.py migrate --noinput && gunicorn ewaste_api.wsgi:application
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ewaste-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: false
+      - key: ALLOWED_HOSTS
+        value: ewaste-api.onrender.com
+      - key: ACCESS_TOKEN_LIFETIME_MINUTES
+        value: "30"
+      - key: REFRESH_TOKEN_LIFETIME_DAYS
+        value: "7"
+databases:
+  - name: ewaste-db
+    plan: free

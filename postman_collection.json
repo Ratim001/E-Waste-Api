@@ -1,0 +1,211 @@
+{
+  "info": {
+    "name": "E-Waste Collection API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Complete Postman collection for the E-Waste Collection & Pricing API"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"collector1\",\n  \"email\": \"collector1@example.com\",\n  \"password\": \"CollectorPass123\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth", "register"]}
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"collector1\",\n  \"password\": \"CollectorPass123\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"]}
+          }
+        },
+        {
+          "name": "Refresh",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/auth/refresh", "host": ["{{base_url}}"], "path": ["auth", "refresh"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "List Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "url": {"raw": "{{base_url}}/categories/", "host": ["{{base_url}}"], "path": ["categories", ""]}
+          }
+        },
+        {
+          "name": "Create Category (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Phone Boards\",\n  \"base_price_per_kg\": \"7500\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/categories/", "host": ["{{base_url}}"], "path": ["categories", ""]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Suppliers",
+      "item": [
+        {
+          "name": "Create Supplier",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"supplier_name\": \"City Recycling\",\n  \"contact\": \"0700-111-222\",\n  \"location\": \"Nairobi\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/suppliers/", "host": ["{{base_url}}"], "path": ["suppliers", ""]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Items",
+      "item": [
+        {
+          "name": "Create Item",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": 1,\n  \"weight_kg\": \"4.5\",\n  \"condition\": \"good\",\n  \"source_supplier\": 1,\n  \"date_collected\": \"2025-01-05\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/items/", "host": ["{{base_url}}"], "path": ["items", ""]}
+          }
+        },
+        {
+          "name": "Estimate Item Price",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "url": {"raw": "{{base_url}}/items/1/estimate_price", "host": ["{{base_url}}"], "path": ["items", "1", "estimate_price"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transactions",
+      "item": [
+        {
+          "name": "Create Transaction",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ewaste_item\": 1,\n  \"sale_price\": \"25000\",\n  \"buyer_name\": \"Buyer Ltd\",\n  \"status\": \"stocked\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/transactions/", "host": ["{{base_url}}"], "path": ["transactions", ""]}
+          }
+        },
+        {
+          "name": "Update Transaction (sold)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"sold\",\n  \"date_sold\": \"2025-01-10\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/transactions/1/", "host": ["{{base_url}}"], "path": ["transactions", "1", ""]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Today",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "url": {"raw": "{{base_url}}/analytics/today", "host": ["{{base_url}}"], "path": ["analytics", "today"]}
+          }
+        },
+        {
+          "name": "Monthly",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "url": {"raw": "{{base_url}}/analytics/monthly", "host": ["{{base_url}}"], "path": ["analytics", "monthly"]}
+          }
+        },
+        {
+          "name": "Supplier Ranking",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{access_token}}"}
+            ],
+            "url": {"raw": "{{base_url}}/analytics/supplier-ranking", "host": ["{{base_url}}"], "path": ["analytics", "supplier-ranking"]}
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {"key": "base_url", "value": "http://127.0.0.1:8000"},
+    {"key": "access_token", "value": ""},
+    {"key": "refresh_token", "value": ""}
+  ]
+}

@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv/
+venv/
+.env.local
+
+# Django
+*.log
+staticfiles/
+media/
+
+# VS Code
+.vscode/
+
+# Pytest
+.pytest_cache/
+
+# Mac/Windows
+.DS_Store
+Thumbs.db
