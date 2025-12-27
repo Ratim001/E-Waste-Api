@@ -6,6 +6,7 @@ from .models import EWasteItem
 @admin.register(EWasteItem)
 class EWasteItemAdmin(admin.ModelAdmin):
     list_display = (
+        "id",
         "category",
         "weight_kg",
         "condition",
