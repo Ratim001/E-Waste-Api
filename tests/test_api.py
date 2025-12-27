@@ -170,7 +170,8 @@ class EWasteAPITestCase(APITestCase):
         transaction_response = self.client.post(
             "/transactions/",
             {
-                "ewaste_item": item_id,
+                "category": self.category.id,
+                "weight_kg": "4.5",
                 "sale_price": "20000",
                 "buyer_name": "Buyer A",
                 "status": "stocked",

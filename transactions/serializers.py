@@ -5,9 +5,9 @@ from .models import Transaction
 
 class TransactionSerializer(serializers.ModelSerializer):
     ewaste_item_detail = serializers.SerializerMethodField(read_only=True)
-    category_name = serializers.CharField(source="ewaste_item.category.name", read_only=True)
+    category_name = serializers.CharField(source="category.name", read_only=True)
     category_base_price_per_kg = serializers.DecimalField(
-        source="ewaste_item.category.base_price_per_kg",
+        source="category.base_price_per_kg",
         max_digits=10,
         decimal_places=2,
         read_only=True,
@@ -17,7 +17,8 @@ class TransactionSerializer(serializers.ModelSerializer):
         model = Transaction
         fields = (
             "id",
-            "ewaste_item",
+            "category",
+            "weight_kg",
             "ewaste_item_detail",
             "category_name",
             "category_base_price_per_kg",
@@ -29,10 +30,9 @@ class TransactionSerializer(serializers.ModelSerializer):
         )
 
     def get_ewaste_item_detail(self, obj):
-        if not obj.ewaste_item:
+        if not obj.category or not obj.weight_kg:
             return None
-        # Use the item's __str__ to reflect both category and weight for clarity.
-        return str(obj.ewaste_item)
+        return f"#{obj.category_id} | {obj.category.name} ({obj.weight_kg} kgs)"
 
     def validate(self, attrs):
         status_value = attrs.get("status") or getattr(self.instance, "status", None)

@@ -1,6 +1,6 @@
 from django.db import models
 
-from items.models import EWasteItem
+from catalog.models import ItemCategory
 
 
 class Transaction(models.Model):
@@ -8,9 +8,12 @@ class Transaction(models.Model):
         STOCKED = "stocked", "Stocked"
         SOLD = "sold", "Sold"
 
-    ewaste_item = models.ForeignKey(
-        EWasteItem, on_delete=models.CASCADE, related_name="transactions"
+    category = models.ForeignKey(
+        ItemCategory,
+        on_delete=models.PROTECT,
+        related_name="transactions",
     )
+    weight_kg = models.DecimalField(max_digits=10, decimal_places=3)
     sale_price = models.DecimalField(max_digits=12, decimal_places=2)
     buyer_name = models.CharField(max_length=200)
     date_sold = models.DateField(null=True, blank=True)
@@ -22,15 +25,19 @@ class Transaction(models.Model):
     class Meta:
         ordering = ["-created_at"]
         indexes = [
-            models.Index(fields=["ewaste_item"]),
+            models.Index(fields=["category"]),
             models.Index(fields=["date_sold"]),
         ]
         constraints = [
             models.CheckConstraint(
                 check=models.Q(sale_price__gte=0),
                 name="transaction_sale_price_non_negative",
-            )
+            ),
+            models.CheckConstraint(
+                check=models.Q(weight_kg__gt=0),
+                name="transaction_weight_positive",
+            ),
         ]
 
     def __str__(self):
-        return f"Transaction for {self.ewaste_item_id} ({self.status})"
+        return f"Transaction for category {self.category_id} ({self.status})"

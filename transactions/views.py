@@ -6,7 +6,7 @@ from .serializers import TransactionSerializer
 
 class TransactionViewSet(viewsets.ModelViewSet):
     serializer_class = TransactionSerializer
-    queryset = Transaction.objects.select_related("ewaste_item", "ewaste_item__created_by")
+    queryset = Transaction.objects.select_related("category")
 
     def get_queryset(self):
         user = self.request.user
@@ -14,4 +14,4 @@ class TransactionViewSet(viewsets.ModelViewSet):
             return Transaction.objects.none()
         if user.is_staff or getattr(user, "role", "") == "admin":
             return self.queryset
-        return self.queryset.filter(ewaste_item__created_by=user)
+        return self.queryset
