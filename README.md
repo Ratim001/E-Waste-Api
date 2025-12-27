@@ -4,7 +4,7 @@ Production-ready REST API that powers authenticated collection, pricing, supplie
 
 ## Highlights
 - JWT authentication with role-based authorization (collectors vs admins)
-- Automatic pricing engine using $estimated_value = base_price_per_kg × weight_kg × multiplier$
+- Automatic pricing engine using $estimated_value = $base_price_per_kg × weight_kg × multiplier$
 - CRUD endpoints for categories, suppliers, items, and transactions
 - Transactions now link directly to item categories and capture sale-specific `weight_kg`
 - E-waste analytics: today totals, monthly rollups, supplier ranking
