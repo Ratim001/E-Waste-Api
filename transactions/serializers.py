@@ -4,7 +4,14 @@ from .models import Transaction
 
 
 class TransactionSerializer(serializers.ModelSerializer):
-    ewaste_item_detail = serializers.CharField(source="ewaste_item.category.name", read_only=True)
+    ewaste_item_detail = serializers.SerializerMethodField(read_only=True)
+    category_name = serializers.CharField(source="ewaste_item.category.name", read_only=True)
+    category_base_price_per_kg = serializers.DecimalField(
+        source="ewaste_item.category.base_price_per_kg",
+        max_digits=10,
+        decimal_places=2,
+        read_only=True,
+    )
 
     class Meta:
         model = Transaction
@@ -12,12 +19,20 @@ class TransactionSerializer(serializers.ModelSerializer):
             "id",
             "ewaste_item",
             "ewaste_item_detail",
+            "category_name",
+            "category_base_price_per_kg",
             "sale_price",
             "buyer_name",
             "date_sold",
             "status",
             "created_at",
         )
+
+    def get_ewaste_item_detail(self, obj):
+        if not obj.ewaste_item:
+            return None
+        # Use the item's __str__ to reflect both category and weight for clarity.
+        return str(obj.ewaste_item)
 
     def validate(self, attrs):
         status_value = attrs.get("status") or getattr(self.instance, "status", None)
