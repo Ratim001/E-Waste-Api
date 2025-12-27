@@ -69,4 +69,5 @@ class EWasteItem(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.category.name} ({self.weight_kg} kg)"
+        item_id = self.id or "unsaved"
+        return f"#{item_id} | {self.category.name} ({self.weight_kg} kg)"
