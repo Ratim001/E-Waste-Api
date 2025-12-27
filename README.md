@@ -6,14 +6,15 @@ Production-ready REST API that powers authenticated collection, pricing, supplie
 - JWT authentication with role-based authorization (collectors vs admins)
 - Automatic pricing engine using $\text{estimated\_value} = base\_price\_per\_kg \times weight\_kg \times multiplier$
 - CRUD endpoints for categories, suppliers, items, and transactions
+- Transactions now link directly to item categories and capture sale-specific `weight_kg`
 - E-waste analytics: today totals, monthly rollups, supplier ranking
 - Postman collection, automated tests, GitHub Actions CI, Render deployment files
 
 ## Architecture Overview
 - **apps/**: `accounts`, `catalog`, `suppliers`, `items`, `transactions`, `analytics`
 - **Core models**: custom `accounts.User`, `catalog.ItemCategory`, `suppliers.Supplier`, `items.EWasteItem`, `transactions.Transaction`
-- **FK behaviors**: PROTECT (`category`), SET NULL (`source_supplier`, `created_by`), CASCADE (`transactions.ewaste_item`)
-- **Indexes**: `EWasteItem(category,date_collected,created_by,source_supplier)` and `Transaction(ewaste_item,date_sold)`
+- **FK behaviors**: PROTECT (`EWasteItem.category`, `Transaction.category`), SET NULL (`source_supplier`, `created_by`)
+- **Indexes**: `EWasteItem(category,date_collected,created_by,source_supplier)` and `Transaction(category,date_sold)`
 - **Docs**: drf-spectacular schema at `/schema/`, interactive Swagger UI at `/docs/`
 
 ## Tech Stack
@@ -93,7 +94,8 @@ Table ewaste_items {
 }
 Table transactions {
   id bigserial [pk]
-  ewaste_item_id bigint [ref: > ewaste_items.id]
+  category_id bigint [ref: > item_categories.id]
+  weight_kg decimal(10,3) [not null]
   sale_price decimal(12,2) [not null]
   buyer_name varchar(200) [not null]
   date_sold date
@@ -117,10 +119,15 @@ Use the snippet above to generate an ERD in tools such as dbdiagram.io.
 | Suppliers | `/suppliers/` | Collectors + admins |
 | Items | `/items/` | Auto price calculation |
 | | `/items/{id}/estimate_price` | Recompute estimate |
-| Transactions | `/transactions/` | Requires owned item |
+| Transactions | `/transactions/` | Provide `category` + `weight_kg` per sale |
 | Analytics | `/analytics/today` | Daily totals |
 | | `/analytics/monthly` | Month aggregates |
 | | `/analytics/supplier-ranking` | Ranked suppliers |
+
+## Transactions Payload
+- **Request fields**: `category` (1=Motherboards, 2=RAM, 3=Phone Boards), `weight_kg`, `sale_price`, `buyer_name`, optional `date_sold`, and `status` (`stocked`/`sold`).
+- **Response fields**: mirrors the request plus `ewaste_item_detail` formatted as `#<category_id> | <category_name> (<weight_kg> kgs)`, `category_name`, `category_base_price_per_kg`, and timestamps.
+- **Why**: transactions are now decoupled from individual `EWasteItem` rows, so every sale records its own weight even if no physical inventory item exists.
 
 ## Price Estimation
 Condition multipliers: `poor=0.8`, `fair=0.9`, `good=1.0`. Values are recomputed automatically when weight, condition, or category changes and exposed via `/items/{id}/estimate_price`.
@@ -170,20 +177,15 @@ curl -H "Authorization: Bearer $ACCESS" "$BASE_URL/categories/"
 curl -X POST "$BASE_URL/items/" -H "Authorization: Bearer $ACCESS" -H "Content-Type: application/json" \
   -d '{"category": 1, "weight_kg": "3.5", "condition": "good", "date_collected": "2025-01-05"}'
 
+# Record transaction (category + weight)
+curl -X POST "$BASE_URL/transactions/" -H "Authorization: Bearer $ACCESS" -H "Content-Type: application/json" \
+  -d '{"category": 3, "weight_kg": "65.00", "sale_price": "70000", "buyer_name": "Isiolo County Gov", "status": "sold", "date_sold": "2025-12-06"}'
+
 # View analytics
+curl -H "Authorization: Bearer $ACCESS" "$BASE_URL/analytics/today"
+```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-- **Postman**: `postman_collection.json`- **OpenAPI schema**: `/schema/`- **Swagger UI**: `/docs`---6. **Open `/docs`** to showcase interactive schema & try-it-out5. **Show analytics** (`/analytics/today` and `/analytics/supplier-ranking`) to demonstrate aggregation updates4. **Create supplier + item** using the access token; highlight auto `estimated_value`3. **Seed categories** locally or confirm categories on Render via `/categories/`2. **Login** at `/auth/login` and copy access token1. **Register collector** via `/auth/register`## Walkthrough Script (Demo Recording)```curl -H "Authorization: Bearer $ACCESS" "$BASE_URL/analytics/today"
+## Tooling References
+- Postman collection: `postman_collection.json`
+- OpenAPI schema: `/schema/`
+- Swagger UI: `/docs`
