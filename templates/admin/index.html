@@ -1,0 +1,102 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static log %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static "admin/css/dashboard.css" %}">
+<style>
+.recent-actions-dropdown {
+    border: 1px solid var(--hairline-color, #496785);
+    border-radius: 6px;
+    background: var(--body-bg, #111);
+    overflow: hidden;
+}
+.recent-actions-dropdown summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 14px;
+    font-weight: 600;
+    background: rgba(73, 103, 133, 0.25);
+    color: var(--body-fg, #f5f5f5);
+    position: relative;
+}
+.recent-actions-dropdown summary::-webkit-details-marker {
+    display: none;
+}
+.recent-actions-dropdown .chevron {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%) rotate(0deg);
+    transition: transform 0.2s ease;
+    border: solid currentColor;
+    border-width: 0 2px 2px 0;
+    padding: 4px;
+    display: inline-block;
+}
+.recent-actions-dropdown[open] .chevron {
+    transform: translateY(-50%) rotate(45deg);
+}
+.recent-actions-dropdown:not([open]) .chevron {
+    transform: translateY(-50%) rotate(-45deg);
+}
+.recent-actions-dropdown .dropdown-body {
+    padding: 12px 14px 16px;
+}
+.recent-actions-dropdown .actionlist {
+    margin: 12px 0 0;
+}
+</style>
+{% endblock %}
+
+{% block coltype %}colMS{% endblock %}
+{% block bodyclass %}{{ block.super }} dashboard{% endblock %}
+{% block nav-breadcrumbs %}{% endblock %}
+{% block nav-sidebar %}{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  {% include "admin/app_list.html" with app_list=app_list show_changelinks=True %}
+</div>
+{% endblock %}
+
+{% block sidebar %}
+<div id="content-related">
+    <div class="module" id="recent-actions-module">
+        <details class="recent-actions-dropdown" open>
+            <summary>
+                <span>{% translate 'Recent actions' %}</span>
+                <small>{% translate 'My actions' %}</small>
+                <span class="chevron" aria-hidden="true"></span>
+            </summary>
+            <div class="dropdown-body">
+                {% get_admin_log 10 as admin_log for_user user %}
+                {% if not admin_log %}
+                    <p>{% translate 'None available' %}</p>
+                {% else %}
+                    <ul class="actionlist">
+                    {% for entry in admin_log %}
+                        <li class="{% if entry.is_addition %}addlink{% endif %}{% if entry.is_change %} changelink{% endif %}{% if entry.is_deletion %} deletelink{% endif %}">
+                            {% if entry.is_deletion or not entry.get_admin_url %}
+                                {{ entry.object_repr }}
+                            {% else %}
+                                <a href="{{ entry.get_admin_url }}">{{ entry.object_repr }}</a>
+                            {% endif %}
+                            <br>
+                            {% if entry.content_type %}
+                                <span class="mini quiet">{% filter capfirst %}{{ entry.content_type.name }}{% endfilter %}</span>
+                            {% else %}
+                                <span class="mini quiet">{% translate 'Unknown content' %}</span>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        </details>
+    </div>
+</div>
+{% endblock %}
