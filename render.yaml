@@ -7,6 +7,7 @@ services:
     startCommand: gunicorn ewaste_api.wsgi:application
     postdeploy:
       - python manage.py migrate --noinput
+      - python manage.py collectstatic --noinput
       - python manage.py seed_categories
     envVars:
       - key: DATABASE_URL

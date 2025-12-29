@@ -7,21 +7,44 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
+def _split_csv(raw_value):
+    if not raw_value:
+        return []
+    return [item.strip() for item in raw_value.split(",") if item.strip()]
+
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "insecure-secret-key")
 DEBUG = os.getenv("DEBUG", "false").lower() == "true"
 
-raw_allowed_hosts = os.getenv("ALLOWED_HOSTS")
 default_hosts = ["localhost", "127.0.0.1", "0.0.0.0"]
-if raw_allowed_hosts:
-    ALLOWED_HOSTS = [host.strip() for host in raw_allowed_hosts.split(",") if host.strip()]
-else:
-    ALLOWED_HOSTS = default_hosts.copy()
+raw_allowed_hosts = os.getenv("ALLOWED_HOSTS")
+ALLOWED_HOSTS = _split_csv(raw_allowed_hosts) or default_hosts.copy()
 
 render_host = os.getenv("RENDER_EXTERNAL_HOSTNAME")
-if render_host and render_host not in ALLOWED_HOSTS:
+if render_host:
     ALLOWED_HOSTS.append(render_host)
+ALLOWED_HOSTS = list(dict.fromkeys(ALLOWED_HOSTS))
+
+raw_csrf_trusted = os.getenv("CSRF_TRUSTED_ORIGINS")
+if raw_csrf_trusted:
+    CSRF_TRUSTED_ORIGINS = _split_csv(raw_csrf_trusted)
+else:
+    default_csrf = [
+        "http://localhost",
+        "http://127.0.0.1",
+        "http://0.0.0.0",
+    ]
+    if render_host:
+        default_csrf.extend(
+            [
+                f"https://{render_host}",
+                f"http://{render_host}",
+            ]
+        )
+    CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(default_csrf))
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -45,6 +68,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -103,6 +127,7 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "accounts.User"
@@ -134,6 +159,8 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
 }
 
-raw_csrf_trusted = os.getenv("CSRF_TRUSTED_ORIGINS")
-if raw_csrf_trusted:
-    CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in raw_csrf_trusted.split(",") if origin.strip()]
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = True
+CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SECURE = not DEBUG
+
