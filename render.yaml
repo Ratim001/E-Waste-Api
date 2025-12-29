@@ -3,8 +3,11 @@ services:
     name: ewaste-api
     env: python
     plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: python manage.py makemigrations --noinput && python manage.py migrate --noinput && gunicorn ewaste_api.wsgi:application
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: gunicorn ewaste_api.wsgi:application
+    postdeploy:
+      - python manage.py migrate --noinput
+      - python manage.py seed_categories
     envVars:
       - key: DATABASE_URL
         fromDatabase:
