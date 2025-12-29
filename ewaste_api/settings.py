@@ -13,10 +13,15 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "insecure-secret-key")
 DEBUG = os.getenv("DEBUG", "false").lower() == "true"
 
 raw_allowed_hosts = os.getenv("ALLOWED_HOSTS")
+default_hosts = ["localhost", "127.0.0.1", "0.0.0.0"]
 if raw_allowed_hosts:
     ALLOWED_HOSTS = [host.strip() for host in raw_allowed_hosts.split(",") if host.strip()]
 else:
-    ALLOWED_HOSTS = []
+    ALLOWED_HOSTS = default_hosts.copy()
+
+render_host = os.getenv("RENDER_EXTERNAL_HOSTNAME")
+if render_host and render_host not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(render_host)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
