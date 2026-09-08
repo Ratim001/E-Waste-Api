@@ -57,7 +57,7 @@ class EWasteAPITestCase(APITestCase):
         self.assertEqual(login_response.status_code, status.HTTP_200_OK)
         self.assertIn("access", login_response.data)
 
-    def test_category_creation_requires_admin(self):
+    def test_admin_can_create_category(self):
         self.authenticate("admin", "adminpass123")
         response = self.client.post(
             "/categories/",
@@ -206,3 +206,35 @@ class EWasteAPITestCase(APITestCase):
         supplier_response = self.client.get(reverse("analytics-suppliers"))
         self.assertEqual(supplier_response.status_code, status.HTTP_200_OK)
         self.assertIn("ranking", supplier_response.data)
+
+    def test_collector_cannot_create_category(self):
+        self.authenticate("collector", "collectorpass123")
+        response = self.client.post(
+            "/categories/",
+            {"name": "Restricted Boards", "base_price_per_kg": "6000.00"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertFalse(ItemCategory.objects.filter(name="Restricted Boards").exists())
+
+    def test_anonymous_user_cannot_create_category(self):
+        response = self.client.post(
+            "/categories/",
+            {"name": "Anonymous Boards", "base_price_per_kg": "6000.00"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertFalse(ItemCategory.objects.filter(name="Anonymous Boards").exists())
+
+    def test_collector_cannot_change_or_delete_category(self):
+        self.authenticate("collector", "collectorpass123")
+        url = f"/categories/{self.category.pk}/"
+        response = self.client.patch(
+            url, {"base_price_per_kg": "1.00"}, format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.category.refresh_from_db()
+        self.assertEqual(self.category.base_price_per_kg, Decimal("5000.00"))
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertTrue(ItemCategory.objects.filter(pk=self.category.pk).exists())

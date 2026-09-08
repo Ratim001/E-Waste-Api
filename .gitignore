@@ -23,3 +23,9 @@ media/
 # Mac/Windows
 .DS_Store
 Thumbs.db
+
+# Local databases and one-off workspace tools
+*.sqlite3
+*.sqlite3-journal
+*.code-workspace
+tmp_update_readme.py
